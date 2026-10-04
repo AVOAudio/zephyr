@@ -14,5 +14,59 @@
 				ranges = <0 0x8000000 DT_SIZE_K(2048)>;
 			};
 		};
+
+
+sai3: sai3@40016000 {
+    compatible = "st,stm32-sai";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    reg = <0x40016000 0x400>;
+    ranges;
+    clocks = <&rcc STM32_CLOCK(APB2, 24)>,
+             <&rcc STM32_SRC_PLL2_P SAI23_SEL(0)>;
+    clock-names = "sai_ck", "sai_ker_ck";
+    status = "disabled";
+
+    sai3_a: sai3a@40016004 {
+        reg = <0x40016004 0x20>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        status = "disabled";
+    };
+
+    sai3_b: sai3b@40016024 {
+        reg = <0x40016024 0x20>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        status = "disabled";
+    };
+};
+
+sai4: sai4@58005400 {
+    compatible = "st,stm32-sai";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    reg = <0x58005400 0x400>;
+    ranges;
+    clocks = <&rcc STM32_CLOCK(APB4, 21)>,
+             <&rcc STM32_SRC_PLL2_P SAI4A_SEL(0)>,
+             <&rcc STM32_SRC_PLL2_P SAI4B_SEL(0)>;
+    clock-names = "sai_ck", "sai_ker_ck", "sai_b_ker_ck";
+    status = "disabled";
+
+    sai4_a: sai4a@58005404 {
+        reg = <0x58005404 0x20>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        status = "disabled";
+    };
+
+    sai4_b: sai4b@58005424 {
+        reg = <0x58005424 0x20>;
+        #address-cells = <1>;
+        #size-cells = <0>;
+        status = "disabled";
+    };
+};
 	};
 };
