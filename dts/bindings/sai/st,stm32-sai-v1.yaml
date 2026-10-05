@@ -1,0 +1,236 @@
+# Copyright ...
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  STM32 SAI v1 controller.
+
+  The SAI controller contains one or more SAI sub-blocks. The parent
+  controller provides the common register space, RCC clocks, and
+  synchronization configuration. Each child node represents an individual
+  SAI sub-block and provides its own audio configuration, DMA, and pinctrl.
+
+compatible: "st,stm32-sai-v1"
+
+include: base.yaml
+
+properties:
+  reg:
+    type: array
+    required: true
+    description: |
+      Base address and size of the SAI controller register space.
+
+  clocks:
+    type: phandle-array
+    required: true
+    description: |
+      Clock inputs required by the SAI controller.
+
+      The first clock is typically the peripheral/bus clock used to
+      enable the SAI peripheral. Additional clocks provide the SAI
+      kernel clock source.
+
+  clock-names:
+    type: string-array
+    required: true
+    enum:
+      - "sai_ck"
+      - "sai_ker_ck"
+      - "sai_b_ker_ck"
+    description: |
+      Names identifying the clocks listed in the clocks property.
+
+      sai_ck:
+        SAI peripheral/bus clock.
+
+      sai_ker_ck:
+        SAI A kernel clock.
+
+      sai_b_ker_ck:
+        SAI B kernel clock when the hardware provides a separate
+        kernel clock for SAI B.
+
+  syncout:
+    type: string
+    required: true
+    enum:
+      - "no-sync"
+      - "sync-a"
+      - "sync-b"
+    description: |
+      Synchronization output configuration for the SAI controller.
+
+      no-sync:
+        No synchronization output is generated.
+
+      sync-a:
+        Synchronization is generated from SAI block A.
+
+      sync-b:
+        Synchronization is generated from SAI block B.
+
+  syncin:
+    type: string
+    required: true
+    enum:
+      - "no-sync"
+      - "sai1"
+      - "sai2"
+      - "sai3"
+      - "sai4"
+    description: |
+      SAI controller providing the synchronization input.
+
+      no-sync:
+        No synchronization input is used.
+
+      sai1:
+        Synchronization is provided by SAI1.
+
+      sai2:
+        Synchronization is provided by SAI2.
+
+      sai3:
+        Synchronization is provided by SAI3.
+
+      sai4:
+        Synchronization is provided by SAI4.
+
+  "#address-cells":
+    const: 1
+    description: |
+      Number of 32-bit cells used to represent the address of a child
+      SAI sub-block.
+
+  "#size-cells":
+    const: 1
+    description: |
+      Number of 32-bit cells used to represent the size of a child
+      SAI sub-block register region.
+
+child-binding:
+  description: |
+    STM32 SAI v1 sub-block.
+
+    Each SAI controller contains one or more sub-blocks. A sub-block
+    represents an individual SAI audio interface and contains its own
+    audio protocol, synchronization, DMA, and pin configuration.
+
+  include:
+    - pinctrl-device.yaml
+
+  properties:
+    reg:
+      type: array
+      required: true
+      description: |
+        Register offset and size of this SAI sub-block relative to
+        the parent SAI controller.
+
+    sync:
+      type: string
+      required: true
+      enum:
+        - "ext-sync"
+        - "int-sync"
+        - "no-sync"
+        - "async"
+      description: |
+        Synchronization mode of this SAI sub-block.
+
+        ext-sync:
+          Synchronization is provided by an external SAI source.
+
+        int-sync:
+          Synchronization is provided internally by another SAI
+          sub-block.
+
+        no-sync:
+          The sub-block operates without synchronization to another
+          SAI sub-block.
+
+        async:
+          The sub-block operates asynchronously.
+
+    protocol:
+      type: string
+      required: true
+      enum:
+        - "i2s"
+        - "tdm"
+        - "left-i2s"
+        - "right-i2s"
+      description: |
+        Audio serial protocol used by this SAI sub-block.
+
+        i2s:
+          Standard I2S audio protocol.
+
+        tdm:
+          Time Division Multiplexed audio protocol.
+
+        left-i2s:
+          Left-justified I2S audio protocol.
+
+        right-i2s:
+          Right-justified I2S audio protocol.
+
+    mode:
+      type: string
+      required: true
+      enum:
+        - "master-rx"
+        - "master-tx"
+        - "slave-rx"
+        - "slave-tx"
+      description: |
+        Operating mode of this SAI sub-block.
+
+        Defines whether the sub-block operates as a master or slave
+        and whether it performs transmit or receive operations.
+
+    nomck:
+      type: boolean
+      required: false
+      description: |
+        Controls whether the master clock (MCLK) output is disabled.
+
+        When present, MCLK output is disabled.
+        When absent, MCLK output is enabled.
+
+    dmas:
+      type: phandle-array
+      required: true
+      description: |
+        DMA channel used by this SAI sub-block.
+
+        The referenced DMA controller provides the DMA channel used
+        to transfer audio samples between the SAI peripheral and memory.
+
+    dma-names:
+      type: string-array
+      required: true
+      description: |
+        Name of the DMA channel referenced by dmas.
+
+        The name identifies whether the channel is used for transmit
+        or receive operations.
+
+        Typical values are:
+          - tx
+          - rx
+
+    pinctrl-0:
+      required: true
+      description: |
+        Default pin configuration for this SAI sub-block.
+
+        The referenced pinctrl state configures the SAI pins such as
+        MCLK, SCK, FS, and SD.
+
+    pinctrl-names:
+      required: true
+      description: |
+        Names assigned to the pinctrl states.
+
+        The default state should normally be named "default".
