@@ -1,8 +1,9 @@
 /*
  * Copyright (c) 2024-2025 Christopher Leo
- * 
+ *
  * SPDX-License-Identifier: Apache-2.0
  */
+
 #include <zephyr/drivers/sai/sai_stm32_v1.h>
 #include <zephyr/logging/log.h>
 
@@ -34,7 +35,7 @@ int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
  }
 
 /* API assigned here but delcared in the sai subsystem */
-static DEVICE_API(sai, sai_stm32_api) = 
+static DEVICE_API(sai, sai_stm32_api) =
 {
     .trigger       = sai_stm32_trigger,
     .mute          = sai_stm32_mute,
@@ -47,9 +48,9 @@ static void setSaiSyncOut(const uint32_t reg, const char* syncout)
 {
     uint32_t value = 0;
 
-    if (strcmp(syncout, "syncout-a") == 0)
+    if (strcmp(syncout, "sync-a") == 0)
           value = (1 << 4);
-    else if (strcmp(syncout, "syncout-b") == 0)
+    else if (strcmp(syncout, "sync-b") == 0)
           value = (2 << 4);
     else if (strcmp(syncout, "nosync") == 0)
         return;
@@ -83,7 +84,7 @@ static void setSaiSync(const uint32_t reg, const char* sync)
 
     if (strcmp(sync, "async") == 0)
         value = 0 << 10;
-    else if (strcmp(sync, "int-snyc") == 0)
+    else if (strcmp(sync, "int-sync") == 0)
         value = 1 << 10;
     else if (strcmp(sync, "ext-sync") == 0)
         value = 2 << 10;
@@ -115,6 +116,12 @@ static void setSaiProtocol(const uint32_t reg, const char* protocol)
     /* WS initial Assertion */
     sys_update32(0 << 17, reg + 0x0C);
 
+    /*FRL 64 */
+    sys_update32(63 << 0, reg + 0x0C);
+
+    /*FACTIVE 32 */
+    sys_update32(31 << 8, reg + 0x0C);
+
     /* Frame length / FS definition */
     sys_update32(3 << 16, reg + 0x10);
 
@@ -143,7 +150,7 @@ static void setSaiMode(const uint32_t reg, const char* mode)
 
 if (strcmp(mode, "master-rx") == 0)
 {
-    value = 1 << 0; 
+    value = 1 << 0;
 }
 else if (strcmp(mode, "master-tx") == 0)
 {
@@ -176,7 +183,9 @@ static int sai_sub_probe(const struct device* dev)
     setSaiProtocol(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->protocol);
     setSaiMode(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->mode);
     setSaiNoMclk(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->nomclk);
-	return 0;
+
+    sys_update32(1 << 17, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04);
+    return 0;
 }
 
 static int sai_probe(const struct device* dev)
@@ -193,20 +202,11 @@ static int sai_probe(const struct device* dev)
     setSaiSyncIn(((struct sai_stm32_dts_config_t*)dev->config)->reg, ((struct sai_stm32_dts_config_t*)dev->config)->syncin);
 	return 0;
 }
-                               
+
 #define SAI_SUB_INIT(node)                                                   \
     PINCTRL_DT_DEFINE(node);                                                 \
-    static const struct sai_dma_dts_data_t sai_dma_dts_config##node = {      \
-        .channel        = DT_DMAS_CELL_BY_IDX(node, 0, channel),             \
-        .slot           = DT_DMAS_CELL_BY_IDX(node, 0, slot),                \
-        .channel_config = DT_DMAS_CELL_BY_IDX(node, 0, channel_config),      \
-        .features       = DT_DMAS_CELL_BY_IDX(node, 0, features),            \
-    };                                                                       \
-                                                                             \
     static const struct sai_sub_block_stm32_dts_config_t sub_cfg##node = {   \
         .reg      = DT_REG_ADDR(node),                                       \
-        .dmas     = DEVICE_DT_GET(DT_DMAS_CTLR_BY_IDX(node, 0)),             \
-        .dmaData  = &sai_dma_dts_config##node,                               \
         .pinctrl  = PINCTRL_DT_DEV_CONFIG_GET(node),                         \
         .sync     = DT_PROP(node, sync),                                     \
         .protocol = DT_PROP(node, protocol),                                 \
@@ -217,12 +217,12 @@ static int sai_probe(const struct device* dev)
     DEVICE_DT_DEFINE(node,                                                   \
         sai_sub_probe,                                                       \
         NULL,                                                                \
-        NULL,                                                                \
+        NULL,                          			                     \
         &sub_cfg##node,                                                      \
         PRE_KERNEL_1,                                                        \
         CONFIG_SAI_STM32_V1_INIT_PRIORITY,                                   \
         &sai_stm32_api);
-                                                                            
+
 #define SAI_INIT(inst)                                                          \
 static const struct stm32_pclken sai_clock_dts_data##inst[] = {                 \
         SAI_CLOCKS(inst)                                                        \
@@ -243,7 +243,7 @@ static const struct sai_stm32_dts_config_t sai_cfg##inst = {                    
         NULL,                                                                   \
         &sai_cfg##inst,                                                         \
         PRE_KERNEL_1,                                                           \
-        70,                                                                     \
+        70,                  					                \
         NULL);                                                                  \
     DT_FOREACH_CHILD_STATUS_OKAY(DT_DRV_INST(inst), SAI_SUB_INIT)
 

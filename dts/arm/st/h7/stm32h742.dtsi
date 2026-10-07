@@ -92,13 +92,13 @@
 
             status = "disabled";
 
-            sai2_a: sai2a@4 {
-                reg = <0x04 0x20>;
+            sai2_a: sai2a@40015c00 {
+                reg = <0x40015c00 0x20>;
                 status = "disabled";
             };
 
-            sai2_b: sai2b@24 {
-                reg = <0x24 0x20>;
+            sai2_b: sai2b@40015c20 {
+                reg = <0x40015c20 0x20>;
                 status = "disabled";
             };
         };

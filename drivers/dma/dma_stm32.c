@@ -690,8 +690,6 @@ static int dma_stm32_configure(const struct device *dev,
 
 	int source_index = find_lsb_set(config->source_data_size) - 1;
 	int dest_index = find_lsb_set(config->dest_data_size) - 1;
-	
-	config->doubleBufferEN ? sys_update32(1 << 14, dev_config->base) : sys_update32(0 << 14, dev_config->base);
 
 	if (stream->direction == MEMORY_TO_PERIPHERAL) {
 		DMA_InitStruct.MemoryOrM2MDstAddress =
@@ -833,12 +831,12 @@ static int dma_stm32_configure(const struct device *dev,
 	LL_DMA_EnableIT_TE(dma, dma_stm32_id_to_stream(id));
 
 	/* Enable transfer complete ISR if in non-cyclic mode or a callback is requested */
-	if (!stream->cyclic || stream->dma_callback != NULL) {
+	if ((!stream->cyclic || stream->dma_callback != NULL) && config-> complete_callback_en) {
 		LL_DMA_EnableIT_TC(dma, dma_stm32_id_to_stream(id));
 	}
 
 	/* Enable Half-Transfer irq if circular mode is enabled and a callback is requested */
-	if (stream->cyclic && stream->dma_callback != NULL) {
+	if (stream->cyclic && stream->dma_callback != NULL && config->half_complete_callback_en) {
 		LL_DMA_EnableIT_HT(dma, dma_stm32_id_to_stream(id));
 	}
 
@@ -854,6 +852,7 @@ static int dma_stm32_configure(const struct device *dev,
 	 */
 	LL_DMA_DisableIT_FE(dma, dma_stm32_id_to_stream(id));
 #endif
+	config->doubleBufferEN ? sys_update32(1 << 18, dev_config->base + (0x10 + (0x18 * id))) : sys_update32(0 << 18, dev_config->base + (0x10 + (0x18 * id)));
 	return ret;
 }
 

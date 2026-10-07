@@ -8,25 +8,15 @@ extern "C" {
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 
-#include <zephyr/drivers/clock_control/stm32_clock_control.h>
-#include <zephyr/drivers/pinctrl.h>
-#include <zephyr/drivers/dma/dma_stm32.h>
-
 #include <zephyr/drivers/sai.h>
+#include <zephyr/drivers/pinctrl.h>
 
-struct sai_dma_dts_data_t {
-    const uint32_t channel;
-    const uint32_t slot;
-    const uint32_t channel_config;
-    const uint32_t features;
-};
+#include <zephyr/drivers/dma/dma_stm32.h>
+#include <zephyr/drivers/clock_control/stm32_clock_control.h>
+
 
 struct sai_sub_block_stm32_dts_config_t {
     const uint32_t reg;
-    /* DMA DTS */
-    const struct device* dmas;
-    const struct sai_dma_dts_data_t* dmaData;
-
     /* PINCTRL DTS */
     const struct pinctrl_dev_config* pinctrl;
 
@@ -63,4 +53,3 @@ struct sai_stm32_dts_config_t {
 #endif
 
 #endif /* ZEPHYR_DRIVERS_SAI_SAI_STM32_V1_H_ */
-
