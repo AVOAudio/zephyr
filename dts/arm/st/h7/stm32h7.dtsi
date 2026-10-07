@@ -1287,19 +1287,18 @@
             compatible = "st,stm32-sai-v1";
             #address-cells = <1>;
             #size-cells = <1>;
-            ranges;
             reg = <0x40015800 0x400>;
             clocks = <&rcc STM32_CLOCK(APB2, 22)>,
                      <&rcc STM32_SRC_PLL2_P SAI1_SEL(0)>;
             clock-names = "sai_ck", "sai_ker_ck";
             status = "disabled";
 
-            sai1_a: sai1a@4 {
+            sai1_a: sai1a@40015800 {
                 reg = <0x40015800 0x20>;
                 status = "disabled";
             };
 
-            sai1_b: sai1b@24 {
+            sai1_b: sai1b@40015820 {
                 reg = <0x40015820 0x20>;
                 status = "disabled";
             };

@@ -690,10 +690,14 @@ static int dma_stm32_configure(const struct device *dev,
 
 	int source_index = find_lsb_set(config->source_data_size) - 1;
 	int dest_index = find_lsb_set(config->dest_data_size) - 1;
+	
+	config->doubleBufferEN ? sys_update32(1 << 14, dev_config->base) : sys_update32(0 << 14, dev_config->base);
 
 	if (stream->direction == MEMORY_TO_PERIPHERAL) {
 		DMA_InitStruct.MemoryOrM2MDstAddress =
 					config->head_block->source_address;
+		if (config->doubleBufferEN)
+					LL_DMA_SetMemory1Address(dma, id, config->head_block->source_address1);
 		DMA_InitStruct.PeriphOrM2MSrcAddress =
 					config->head_block->dest_address;
 		DMA_InitStruct.MemoryOrM2MDstDataSize = table_m_size[source_index];
@@ -703,6 +707,8 @@ static int dma_stm32_configure(const struct device *dev,
 					config->head_block->source_address;
 		DMA_InitStruct.MemoryOrM2MDstAddress =
 					config->head_block->dest_address;
+		if (config->doubleBufferEN)
+					LL_DMA_SetMemory1Address(dma, id, config->head_block->dest_address1);
 		DMA_InitStruct.PeriphOrM2MSrcDataSize = table_p_size[source_index];
 		DMA_InitStruct.MemoryOrM2MDstDataSize = table_m_size[dest_index];
 	}

@@ -115,8 +115,10 @@ struct dma_block_config {
 #else
 	/** block starting address at source */
 	uint32_t source_address;
+	uint32_t source_address1;
 	/** block starting address at destination */
 	uint32_t dest_address;
+	uint32_t dest_address1;
 #endif
 	/** Address adjustment at gather boundary */
 	uint32_t source_gather_interval;
@@ -163,8 +165,7 @@ struct dma_block_config {
 	 * - 0b1 source request postponed until destination request happens
 	 */
 	uint16_t  flow_control_mode : 1;
-
-	uint16_t  _reserved :          3;
+	uint16_t  _reserved :         3;
 };
 
 /** The DMA callback event has occurred at the completion of a transfer list */
@@ -273,6 +274,7 @@ struct dma_config {
 	void *user_data;
 	/** Optional callback for completion and error events */
 	dma_callback_t dma_callback;
+	bool doubleBufferEN    : 1;
 };
 
 /**

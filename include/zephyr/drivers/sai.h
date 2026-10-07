@@ -79,14 +79,6 @@ typedef enum bitdepth_t {
  * STM32 SAI controllers typically contain two independent audio blocks,
  * referred to as block A and block B.
  */
-typedef enum audio_block_t {
-	/** SAI audio block A. */
-	AUDIO_BLOCK_A,
-
-	/** SAI audio block B. */
-	AUDIO_BLOCK_B,
-} audio_block_t;
-
 /**
  * @brief SAI channel configuration.
  */

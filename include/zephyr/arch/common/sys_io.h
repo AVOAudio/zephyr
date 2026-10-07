@@ -65,6 +65,12 @@ static ALWAYS_INLINE void sys_write64(uint64_t data, mem_addr_t addr)
 	*(volatile uint64_t *)addr = data;
 }
 
+static ALWAYS_INLINE void sys_update32(uint32_t value, mem_addr_t reg)
+{
+    uint32_t current = sys_read32(reg);
+
+    sys_write32(current | value, reg);
+}
 /**
  * @endcond
  */
