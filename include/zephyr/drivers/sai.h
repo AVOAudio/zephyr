@@ -124,13 +124,9 @@ __subsystem struct sai_driver_api {
 	 * @return 0 on success, otherwise a negative error code.
 	 */
 	int (*trigger)(const struct device *dev, enum sai_trigger_cmd cmd);
-
 	int (*mute)(const struct device *dev, bool onOff);
-
 	int (*setSampleRate)(const struct device *dev, samplerate_t samplerate);
-
 	int (*setBitDepth)(const struct device *dev, bitdepth_t bitdepth);
-
 	int (*stereoEn)(const struct device *dev, stereoMono_t stereoMono);
 };
 /**

@@ -1,5 +1,10 @@
-menuconfig SAI_STM32_V1
+config SAI_STM32_V1
     bool "STM32 SAI v1 driver"
     default n
     depends on DT_HAS_ST_STM32_SAI_V1_ENABLED
+    depends on DT_HAS_ST_STM32_DMA_V1_ENABLED
     select DMA
+
+config SAI_STM32_V1_INIT_PRIORITY
+    int "STM32 SAI v1 driver init priority"
+    default 100
