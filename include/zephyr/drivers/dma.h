@@ -431,6 +431,7 @@ __subsystem struct dma_driver_api {
 	 * See dma_release_channel() for details.
 	 */
 	dma_api_chan_release chan_release;
+	int (*get_current_target)(const struct device* dev, uint32_t channel);
 };
 
 /** @} */
@@ -449,6 +450,11 @@ static inline int dma_config(const struct device *dev, uint32_t channel,
 			     struct dma_config *config)
 {
 	return DEVICE_API_GET(dma, dev)->config(dev, channel, config);
+}
+
+static inline int dma_get_current_target(const struct device *dev, uint32_t channel)
+{
+	return DEVICE_API_GET(dma, dev)->get_current_target(dev, channel);
 }
 
 /**
