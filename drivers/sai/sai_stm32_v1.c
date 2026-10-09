@@ -11,27 +11,73 @@
 
 int sai_stm32_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
 {
-
+    switch (cmd)
+    {
+        case SAI_START:
+            sys_update32(1 << 16, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 16);
+            break;
+        case SAI_STOP:
+            sys_update32(0 << 16, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 16);
+            break;
+        default:
+            return 0;
+    };
 }
 
 int sai_stm32_mute(const struct device *dev, bool onOff)
 {
-
+    return 0;
 }
 
 int sai_stm32_setSampleRate(const struct device *dev, samplerate_t samplerate)
 {
+    uint32_t value = 0;
 
+    switch (samplerate)
+    {
+        case SR_384KHZ:
+            value = (0 << 20);
+            break;
+        case SR_192KHZ:
+            value = (2 << 20);
+            break;
+        case SR_96KHZ:
+            value = (4 << 20);
+            break;
+        case SR_48KHZ:
+            value = (8 << 20);
+            break;
+        default:
+            return 0;
+    }
+        sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0x3F00000);
 }
 
 int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
 {
+    uint32_t value = 0;
 
+    switch (bitdepth)
+    {
+        case BD_32BIT:
+            value = (7 << 5);
+            break;
+        case BD_24BIT:
+            value = (6 << 5);
+            break;
+        case BD_16BIT:
+            value = (4 << 5);
+            break;
+        default:
+            return 0;
+    }
+        sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0xE0);
 }
 
  int sai_stm32_stereoEn(const struct device *dev, stereoMono_t stereoMono)
  {
-
+     sys_update32(stereoMono == AUDIO_STEREO ? 0 << 12 : 1 << 12, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 12);
+     return 0;
  }
 
 /* API assigned here but delcared in the sai subsystem */
@@ -57,7 +103,7 @@ static void setSaiSyncOut(const uint32_t reg, const char* syncout)
     else
         return;
 
-    sys_update32(value, reg + 0x00);
+    sys_update32(value, reg + 0x00, 0x30);
 }
 
 static void setSaiSyncIn(const uint32_t reg, const char* syncin)
@@ -75,7 +121,7 @@ static void setSaiSyncIn(const uint32_t reg, const char* syncin)
     else
         return;
 
-    sys_update32(value, reg + 0x00);
+    sys_update32(value, reg + 0x00, 0x3);
 }
 
 static void setSaiSync(const uint32_t reg, const char* sync)
@@ -93,53 +139,19 @@ static void setSaiSync(const uint32_t reg, const char* sync)
     else
         return;
 
-    sys_update32(value, reg + 0x4);
+    sys_update32(value, reg + 0x4, 0xC00);
 }
 
 static void setSaiProtocol(const uint32_t reg, const char* protocol)
 {
 
     if (strcmp(protocol, "i2s") == 0)
-{
-    /* 2's complement */
-    sys_update32(1 << 13, reg + 0x08);
-
-    /* MSB worded */
-    sys_update32(0 << 8, reg + 0x04);
-
-    /* WS Assert one before the MSB */
-    sys_update32(1 << 18, reg + 0x0C);
-
-    /* WS is an identifying signal */
-    sys_update32(1 << 16, reg + 0x0C);
-
-    /* WS initial Assertion */
-    sys_update32(0 << 17, reg + 0x0C);
-
-    /*FRL 64 */
-    sys_update32(63 << 0, reg + 0x0C);
-
-    /*FACTIVE 32 */
-    sys_update32(31 << 8, reg + 0x0C);
-
-    /* Frame length / FS definition */
-    sys_update32(3 << 16, reg + 0x10);
-
-    /* 2 Channels = Audio Frame */
-    sys_update32(1 << 8, reg + 0x10);
-
-    /* Bits Size = Data size */
-    sys_update32(0 << 6, reg + 0x10);
-
-    /* 0 Bit Offset */
-    sys_update32(0 << 4, reg + 0x10);
-
-    /* SCK changes on falling edge and sample on rising edge */
-    sys_update32(1 << 9, reg + 0x04);
-
-    /* Free Protocol Mode */
-    sys_update32(0 << 2, reg + 0x04);
-}
+    {
+        sys_update32(1 << 13, reg + 0x8, 1 << 13);
+        sys_update32(0x200, reg + 0x04,  0x30C);
+        sys_update32(0x51F3F, reg + 0xC, 0x77FFF);
+        sys_update32(0x30100, reg + 0x10, 0xFFFF0FDF);
+    }
     else
         return;
 }
@@ -166,12 +178,12 @@ else if (strcmp(mode, "slave-tx") == 0)
 }
  else
     return;
-    sys_update32(value, reg + 0x04);
+    sys_update32(value, reg + 0x04, 0x3);
 }
 
 static void setSaiNoMclk(const uint32_t reg, const bool nomclk)
 {
-    sys_update32(nomclk ? 1 << 19 : 0 << 19, reg + 0x04);
+    sys_update32(nomclk ? 1 << 19 : 0 << 19, reg + 0x04, 1 << 19);
 }
 
 static int sai_sub_probe(const struct device* dev)
@@ -184,7 +196,7 @@ static int sai_sub_probe(const struct device* dev)
     setSaiMode(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->mode);
     setSaiNoMclk(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->nomclk);
 
-    sys_update32(1 << 17, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04);
+    sys_update32(1 << 17, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 17);
     return 0;
 }
 

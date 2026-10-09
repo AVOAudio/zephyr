@@ -852,7 +852,7 @@ static int dma_stm32_configure(const struct device *dev,
 	 */
 	LL_DMA_DisableIT_FE(dma, dma_stm32_id_to_stream(id));
 #endif
-	config->doubleBufferEN ? sys_update32(1 << 18, dev_config->base + (0x10 + (0x18 * id))) : sys_update32(0 << 18, dev_config->base + (0x10 + (0x18 * id)));
+	config->doubleBufferEN ? sys_update32(1 << 18, dev_config->base + (0x10 + (0x18 * id)), 1 << 18) : sys_update32(0 << 18, dev_config->base + (0x10 + (0x18 * id)), 1 << 18);
 	return ret;
 }
 

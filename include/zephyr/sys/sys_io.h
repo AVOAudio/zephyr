@@ -246,7 +246,7 @@ static inline uint16_t sys_read16(mm_reg_t addr);
  * @param addr the memory mapped register address where to write the 32 bits
  */
 static inline void sys_write32(uint32_t data, mm_reg_t addr);
-static inline void sys_update32(mem_addr_t addr, uint32_t data);
+static inline void sys_update32(mem_addr_t addr, uint32_t data, uint32_t mask);
 /**
  * @brief Read 32 bits from a memory mapped register
  *
