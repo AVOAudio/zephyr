@@ -1043,7 +1043,7 @@ int dma_stm32_get_current_target(const struct device* dev, uint32_t id)
 	const struct dma_stm32_config *config = dev->config;
 	DMA_TypeDef *dma = (DMA_TypeDef *)(config->base);
 
-	return LL_DMA_GetCurrentTargetMem(dma, dma_stm32_id_to_stream(id));
+	return LL_DMA_GetCurrentTargetMem(dma, dma_stm32_id_to_stream(id) - STM32_DMA_STREAM_OFFSET);
 }
 
 static DEVICE_API(dma, dma_funcs) = {
