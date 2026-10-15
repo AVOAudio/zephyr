@@ -151,19 +151,19 @@ __syscall int stereoEn(const struct device *dev, stereoMono_t stereoMono);
 
 static inline int z_impl_sai_mute(const struct device *dev, bool onOff)
 {
-	return DEVICE_API_GET(sai, dev)->trigger(dev, onOff);
+	return DEVICE_API_GET(sai, dev)->mute(dev, onOff);
 }
 static inline int z_impl_setSampleRate(const struct device *dev, samplerate_t samplerate)
 {
-	return DEVICE_API_GET(sai, dev)->trigger(dev, samplerate);
+	return DEVICE_API_GET(sai, dev)->setSampleRate(dev, samplerate);
 }
 static inline int z_impl_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
 {
-	return DEVICE_API_GET(sai, dev)->trigger(dev, bitdepth);
+	return DEVICE_API_GET(sai, dev)->setBitDepth(dev, bitdepth);
 }
 static inline int z_impl_stereoEn(const struct device *dev, stereoMono_t stereoMono)
 {
-	return DEVICE_API_GET(sai, dev)->trigger(dev, stereoMono);
+	return DEVICE_API_GET(sai, dev)->stereoEn(dev, stereoMono);
 }
 
 #ifdef __cplusplus
