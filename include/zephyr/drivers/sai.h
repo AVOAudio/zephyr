@@ -45,17 +45,17 @@ __subsystem struct sai_driver_api
 	int (*stereoEn)(const struct device *dev, stereoMono_t stereoMono);
 };
 
-__syscall int sai_mute(const struct device *dev, bool onOff);
+__syscall int mute(const struct device *dev, bool onOff);
 __syscall int setSampleRate(const struct device *dev, uint32_t mckdiv, bool osr);
 __syscall int setBitDepth(const struct device *dev,  bitdepth_t bitdepth);
 __syscall int stereoEn(const struct device *dev, stereoMono_t stereoMono);
-__syscall int sai_trigger(const struct device *dev, enum sai_trigger_cmd cmd);
+__syscall int trigger(const struct device *dev, enum sai_trigger_cmd cmd);
 
-static inline int z_impl_sai_mute(const struct device *dev, bool onOff)
+static inline int z_impl_mute(const struct device *dev, bool onOff)
 {
 	return DEVICE_API_GET(sai, dev)->mute(dev, onOff);
 }
-static inline int z_impl_setSampleRate(const struct device *dev,  uint32_t mckdiv, bool osr);
+static inline int z_impl_setSampleRate(const struct device *dev,  uint32_t mckdiv, bool osr)
 {
 	return DEVICE_API_GET(sai, dev)->setSampleRate(dev, mckdiv, osr);
 }
@@ -67,7 +67,7 @@ static inline int z_impl_stereoEn(const struct device *dev, stereoMono_t stereoM
 {
 	return DEVICE_API_GET(sai, dev)->stereoEn(dev, stereoMono);
 }
-static inline int z_impl_sai_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
+static inline int z_impl_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
 {
 	return DEVICE_API_GET(sai, dev)->trigger(dev, cmd);
 }

@@ -8,12 +8,10 @@ extern "C" {
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 
-//#include <zephyr/drivers/sai.h>
+#include <zephyr/drivers/sai.h>
 #include <zephyr/drivers/pinctrl.h>
 
-//#include <zephyr/drivers/dma/dma_stm32.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
-
 
 struct sai_sub_block_stm32_dts_config_t {
     const uint32_t reg;

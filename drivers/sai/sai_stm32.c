@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/drivers/sai.h>
-
 #include <zephyr/drivers/sai/sai_stm32.h>
 #include <zephyr/logging/log.h>
 
@@ -22,8 +20,10 @@ int sai_stm32_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
             sys_update32(0 << 16, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 16);
             break;
         default:
-            return 0;
+            return -1;
     };
+
+    return 0;
 }
 
 int sai_stm32_mute(const struct device *dev, bool onOff)
@@ -41,6 +41,8 @@ int sai_stm32_setSampleRate(const struct device *dev, uint32_t mckdiv, bool osr)
     struct sai_sub_block_stm32_dts_config_t* config = dev->config;
 
     sys_update32(((mckdiv - 1) << 20) | (osr ? 1 << 26 : 0 << 26), config->reg + 0x04, 0x7F00000);
+
+    return 0;
 }
 
 int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
@@ -59,9 +61,12 @@ int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
             value = (4 << 5);
             break;
         default:
-            return 0;
+            return -1;
     }
-        sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0xE0);
+
+    sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0xE0);
+
+    return 0;
 }
 
  int sai_stm32_stereoEn(const struct device *dev, stereoMono_t stereoMono)
@@ -168,6 +173,7 @@ else if (strcmp(mode, "slave-tx") == 0)
 }
  else
     return;
+
     sys_update32(value, reg + 0x04, 0x3);
 }
 
@@ -223,7 +229,7 @@ static int sai_probe(const struct device* dev)
         NULL,                          			                             \
         &sub_cfg##node,                                                      \
         PRE_KERNEL_1,                                                        \
-        CONFIG_SAI_STM32_V1_INIT_PRIORITY,                                   \
+        SAI_STM32_INIT_PRIORITY,                                   \
         &sai_stm32_api);
 
 #define SAI_INIT(inst)                                                          \

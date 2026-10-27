@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description: |
-  STM32 SAI v1 controller.
+  STM32 SAI controller.
 
   The SAI controller contains one or more SAI sub-blocks. The parent
   controller provides the common register space, RCC clocks, and
   synchronization configuration. Each child node represents an individual
   SAI sub-block and provides its own audio configuration, DMA, and pinctrl.
 
-compatible: "st,stm32-sai-v1"
+compatible: "st,stm32-sai"
 
 include: base.yaml
 
@@ -19,6 +19,9 @@ properties:
     required: true
     description: |
       Base address and size of the SAI controller register space.
+      
+  ranges:
+    required: true
 
   clocks:
     type: phandle-array

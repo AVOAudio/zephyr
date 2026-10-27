@@ -1,9 +1,20 @@
-config SAI_STM32
-    bool "STM32 SAI driver"
-    default n
-    depends on DT_HAS_ST_STM32_DMA_V1_ENABLED
-    select DMA
 
-config SAI_STM32_INIT_PRIORITY
-    int "STM32 SAI driver init priority"
-    default 100
+menuconfig SAI
+    bool "Serial Audio Interface (SAI) bus drivers"
+    select DMA
+    help
+      Enable support for the SAI (Serial Audio Interface) hardware bus.
+
+if SAI
+
+config SAI_INIT_PRIORITY
+    int "Init priority"
+    default KERNEL_INIT_PRIORITY_DEVICE
+    help
+      Device driver initialization priority.
+
+comment "Device Drivers"
+
+source "drivers/sai/Kconfig.*"
+
+endif # SAI
