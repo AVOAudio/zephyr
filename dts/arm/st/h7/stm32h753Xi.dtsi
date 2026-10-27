@@ -16,7 +16,7 @@
         };
 
         sai3: sai3@40016000 {
-            compatible = "st,stm32-sai-v1";
+            compatible = "st,stm32-sai";
 
             #address-cells = <1>;
             #size-cells = <1>;
@@ -43,7 +43,7 @@
         };
 
         sai4: sai4@58005400 {
-            compatible = "st,stm32-sai-v1";
+            compatible = "st,stm32-sai";
 
             #address-cells = <1>;
             #size-cells = <1>;

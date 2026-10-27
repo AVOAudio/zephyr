@@ -4,10 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/drivers/sai/sai_stm32_v1.h>
+#include <zephyr/drivers/sai.h>
+
+#include <zephyr/drivers/sai/sai_stm32.h>
 #include <zephyr/logging/log.h>
 
-#define DT_DRV_COMPAT st_stm32_sai_v1
+#define DT_DRV_COMPAT st_stm32_sai
 
 int sai_stm32_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
 {
@@ -29,28 +31,16 @@ int sai_stm32_mute(const struct device *dev, bool onOff)
     return 0;
 }
 
-int sai_stm32_setSampleRate(const struct device *dev, samplerate_t samplerate)
+int sai_stm32_setSampleRate(const struct device *dev, uint32_t mckdiv, bool osr)
 {
-    uint32_t value = 0;
+    if (dev == NULL)
+        return -1;
+    if (mckdiv < 1 || mckdiv > 64)
+        return -1;
 
-    switch (samplerate)
-    {
-        case SR_384KHZ:
-            value = (0 << 20);
-            break;
-        case SR_192KHZ:
-            value = (2 << 20);
-            break;
-        case SR_96KHZ:
-            value = (4 << 20);
-            break;
-        case SR_48KHZ:
-            value = (8 << 20);
-            break;
-        default:
-            return 0;
-    }
-        sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0x3F00000);
+    struct sai_sub_block_stm32_dts_config_t* config = dev->config;
+
+    sys_update32(((mckdiv - 1) << 20) | (osr ? 1 << 26 : 0 << 26), config->reg + 0x04, 0x7F00000);
 }
 
 int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
@@ -217,7 +207,8 @@ static int sai_probe(const struct device* dev)
 
 #define SAI_SUB_INIT(node)                                                   \
     PINCTRL_DT_DEFINE(node);                                                 \
-    static const struct sai_sub_block_stm32_dts_config_t sub_cfg##node = {   \
+    static const struct sai_sub_block_stm32_dts_config_t sub_cfg##node =     \
+    {                                                                        \
         .reg      = DT_REG_ADDR(node),                                       \
         .pinctrl  = PINCTRL_DT_DEV_CONFIG_GET(node),                         \
         .sync     = DT_PROP(node, sync),                                     \
@@ -229,18 +220,20 @@ static int sai_probe(const struct device* dev)
     DEVICE_DT_DEFINE(node,                                                   \
         sai_sub_probe,                                                       \
         NULL,                                                                \
-        NULL,                          			                     \
+        NULL,                          			                             \
         &sub_cfg##node,                                                      \
         PRE_KERNEL_1,                                                        \
         CONFIG_SAI_STM32_V1_INIT_PRIORITY,                                   \
         &sai_stm32_api);
 
 #define SAI_INIT(inst)                                                          \
-static const struct stm32_pclken sai_clock_dts_data##inst[] = {                 \
+static const struct stm32_pclken sai_clock_dts_data##inst[] =                   \
+{                                                                               \
         SAI_CLOCKS(inst)                                                        \
 };                                                                              \
                                                                                 \
-static const struct sai_stm32_dts_config_t sai_cfg##inst = {                    \
+static const struct sai_stm32_dts_config_t sai_cfg##inst =                      \
+{                                                                               \
         .clockDev  = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR_BY_IDX(inst, 0)),        \
         .clockData = sai_clock_dts_data##inst,                                  \
         .clock_num = DT_INST_NUM_CLOCKS(inst),                                  \
@@ -255,7 +248,7 @@ static const struct sai_stm32_dts_config_t sai_cfg##inst = {                    
         NULL,                                                                   \
         &sai_cfg##inst,                                                         \
         PRE_KERNEL_1,                                                           \
-        70,                  					                \
+        70,                  					                                \
         NULL);                                                                  \
     DT_FOREACH_CHILD_STATUS_OKAY(DT_DRV_INST(inst), SAI_SUB_INIT)
 

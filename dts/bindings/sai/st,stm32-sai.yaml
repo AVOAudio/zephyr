@@ -198,28 +198,6 @@ child-binding:
         When present, MCLK output is disabled.
         When absent, MCLK output is enabled.
 
-    dmas:
-      type: phandle-array
-      required: true
-      description: |
-        DMA channel used by this SAI sub-block.
-
-        The referenced DMA controller provides the DMA channel used
-        to transfer audio samples between the SAI peripheral and memory.
-
-    dma-names:
-      type: string-array
-      required: true
-      description: |
-        Name of the DMA channel referenced by dmas.
-
-        The name identifies whether the channel is used for transmit
-        or receive operations.
-
-        Typical values are:
-          - tx
-          - rx
-
     pinctrl-0:
       required: true
       description: |

@@ -77,7 +77,7 @@
 		};
 
         sai2: sai2@40015c00 {
-            compatible = "st,stm32-sai-v1";
+            compatible = "st,stm32-sai";
 
             #address-cells = <1>;
             #size-cells = <1>;

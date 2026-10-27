@@ -1,5 +1,5 @@
-#ifndef ZEPHYR_DRIVERS_SAI_SAI_STM32_V1_H_
-#define ZEPHYR_DRIVERS_SAI_SAI_STM32_V1_H_
+#ifndef ZEPHYR_DRIVERS_SAI_SAI_STM32_H_
+#define ZEPHYR_DRIVERS_SAI_SAI_STM32_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,10 +8,10 @@ extern "C" {
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 
-#include <zephyr/drivers/sai.h>
+//#include <zephyr/drivers/sai.h>
 #include <zephyr/drivers/pinctrl.h>
 
-#include <zephyr/drivers/dma/dma_stm32.h>
+//#include <zephyr/drivers/dma/dma_stm32.h>
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
 
 
@@ -52,4 +52,4 @@ struct sai_stm32_dts_config_t {
 }
 #endif
 
-#endif /* ZEPHYR_DRIVERS_SAI_SAI_STM32_V1_H_ */
+#endif /* ZEPHYR_DRIVERS_SAI_SAI_STM32_H_ */
