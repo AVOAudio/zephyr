@@ -7,12 +7,6 @@ menuconfig SAI
 
 if SAI
 
-config SAI_INIT_PRIORITY
-    int "Init priority"
-    default KERNEL_INIT_PRIORITY_DEVICE
-    help
-      Device driver initialization priority.
-
 comment "Device Drivers"
 
 source "drivers/sai/Kconfig.*"
