@@ -40,7 +40,7 @@ int sai_stm32_setSampleRate(const struct device *dev, uint32_t mckdiv, bool osr)
 
     struct sai_sub_block_stm32_dts_config_t* config = dev->config;
 
-    sys_update32(((mckdiv - 1) << 20) | (osr ? 1 << 26 : 0 << 26), config->reg + 0x04, 0x7F00000);
+    sys_update32((mckdiv << 20) | (osr ? 1 << 26 : 0 << 26), config->reg + 0x04, 0x7F00000);
 
     return 0;
 }
