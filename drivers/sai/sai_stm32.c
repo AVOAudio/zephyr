@@ -1,0 +1,261 @@
+/*
+ * Copyright (c) 2024-2025 Christopher Leo
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/drivers/sai/sai_stm32.h>
+#include <zephyr/logging/log.h>
+
+#define DT_DRV_COMPAT st_stm32_sai
+
+int sai_stm32_trigger(const struct device *dev, enum sai_trigger_cmd cmd)
+{
+    switch (cmd)
+    {
+        case SAI_START:
+            sys_update32(1 << 16, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 16);
+            break;
+        case SAI_STOP:
+            sys_update32(0 << 16, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 16);
+            break;
+        default:
+            return -1;
+    };
+
+    return 0;
+}
+
+int sai_stm32_mute(const struct device *dev, bool onOff)
+{
+    return 0;
+}
+
+int sai_stm32_setSampleRate(const struct device *dev, uint32_t mckdiv, bool osr)
+{
+    if (dev == NULL)
+        return -1;
+    if (mckdiv < 1 || mckdiv > 64)
+        return -1;
+
+    struct sai_sub_block_stm32_dts_config_t* config = dev->config;
+
+    sys_update32((mckdiv << 20) | (osr ? 1 << 26 : 0 << 26), config->reg + 0x04, 0x7F00000);
+
+    return 0;
+}
+
+int sai_stm32_setBitDepth(const struct device *dev, bitdepth_t bitdepth)
+{
+    uint32_t value = 0;
+
+    switch (bitdepth)
+    {
+        case BD_32BIT:
+            value = (7 << 5);
+            break;
+        case BD_24BIT:
+            value = (6 << 5);
+            break;
+        case BD_16BIT:
+            value = (4 << 5);
+            break;
+        default:
+            return -1;
+    }
+
+    sys_update32(value, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 0xE0);
+
+    return 0;
+}
+
+ int sai_stm32_stereoEn(const struct device *dev, stereoMono_t stereoMono)
+ {
+     sys_update32(stereoMono == AUDIO_STEREO ? 0 << 12 : 1 << 12, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 12);
+     return 0;
+ }
+
+/* API assigned here but delcared in the sai subsystem */
+static DEVICE_API(sai, sai_stm32_api) =
+{
+    .trigger       = sai_stm32_trigger,
+    .mute          = sai_stm32_mute,
+    .setSampleRate = sai_stm32_setSampleRate,
+    .setBitDepth   = sai_stm32_setBitDepth,
+    .stereoEn      = sai_stm32_stereoEn,
+};
+
+static void setSaiSyncOut(const uint32_t reg, const char* syncout)
+{
+    uint32_t value = 0;
+
+    if (strcmp(syncout, "sync-a") == 0)
+          value = (1 << 4);
+    else if (strcmp(syncout, "sync-b") == 0)
+          value = (2 << 4);
+    else if (strcmp(syncout, "nosync") == 0)
+        return;
+    else
+        return;
+
+    sys_update32(value, reg + 0x00, 0x30);
+}
+
+static void setSaiSyncIn(const uint32_t reg, const char* syncin)
+{
+    uint32_t value = 0;
+
+    if (strcmp(syncin, "sai1") == 0)
+          value = (0 << 0);
+    else if (strcmp(syncin, "sai2") == 0)
+          value = (1 << 0);
+    else if (strcmp(syncin, "sai3") == 0)
+           value = (2 << 4);
+    else if (strcmp(syncin, "sai4") == 0)
+           value = (3 << 4);
+    else
+        return;
+
+    sys_update32(value, reg + 0x00, 0x3);
+}
+
+static void setSaiSync(const uint32_t reg, const char* sync)
+{
+    uint32_t value = 0;
+
+    if (strcmp(sync, "async") == 0)
+        value = 0 << 10;
+    else if (strcmp(sync, "int-sync") == 0)
+        value = 1 << 10;
+    else if (strcmp(sync, "ext-sync") == 0)
+        value = 2 << 10;
+    else if (strcmp(sync, "no-sync") == 0)
+       return;
+    else
+        return;
+
+    sys_update32(value, reg + 0x4, 0xC00);
+}
+
+static void setSaiProtocol(const uint32_t reg, const char* protocol)
+{
+
+    if (strcmp(protocol, "i2s") == 0)
+    {
+        sys_update32(1 << 13, reg + 0x8, 1 << 13);
+        sys_update32(0x200, reg + 0x04,  0x30C);
+        sys_update32(0x51F3F, reg + 0xC, 0x77FFF);
+        sys_update32(0x30100, reg + 0x10, 0xFFFF0FDF);
+    }
+    else
+        return;
+}
+
+static void setSaiMode(const uint32_t reg, const char* mode)
+{
+    uint32_t value = 0;
+
+if (strcmp(mode, "master-rx") == 0)
+{
+    value = 1 << 0;
+}
+else if (strcmp(mode, "master-tx") == 0)
+{
+    value = 0 << 0;
+}
+else if (strcmp(mode, "slave-rx") == 0)
+{
+    value = 3 << 0;
+}
+else if (strcmp(mode, "slave-tx") == 0)
+{
+    value = 2 << 0;
+}
+ else
+    return;
+
+    sys_update32(value, reg + 0x04, 0x3);
+}
+
+static void setSaiNoMclk(const uint32_t reg, const bool nomclk)
+{
+    sys_update32(nomclk ? 1 << 19 : 0 << 19, reg + 0x04, 1 << 19);
+}
+
+static int sai_sub_probe(const struct device* dev)
+{
+    /* Init Pinctrl */
+    pinctrl_apply_state(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->pinctrl, PINCTRL_STATE_DEFAULT);
+
+    setSaiSync(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->sync);
+    setSaiProtocol(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->protocol);
+    setSaiMode(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->mode);
+    setSaiNoMclk(((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->nomclk);
+
+    sys_update32(1 << 17, ((struct sai_sub_block_stm32_dts_config_t*)dev->config)->reg + 0x04, 1 << 17);
+    return 0;
+}
+
+static int sai_probe(const struct device* dev)
+{
+	/* Init Clock */
+    const struct device* clock_dev = ((struct sai_stm32_dts_config_t*)dev->config)->clockDev;
+
+    for (uint32_t clockIdx = 0; clockIdx < ((struct sai_stm32_dts_config_t*)dev->config)->clock_num; clockIdx++)
+    {
+        clock_control_on(clock_dev, &((struct sai_stm32_dts_config_t*)dev->config)->clockData[clockIdx]);
+    }
+
+    setSaiSyncOut(((struct sai_stm32_dts_config_t*)dev->config)->reg, ((struct sai_stm32_dts_config_t*)dev->config)->syncout);
+    setSaiSyncIn(((struct sai_stm32_dts_config_t*)dev->config)->reg, ((struct sai_stm32_dts_config_t*)dev->config)->syncin);
+	return 0;
+}
+
+#define SAI_SUB_INIT(node)                                                   \
+    PINCTRL_DT_DEFINE(node);                                                 \
+    static const struct sai_sub_block_stm32_dts_config_t sub_cfg##node =     \
+    {                                                                        \
+        .reg      = DT_REG_ADDR(node),                                       \
+        .pinctrl  = PINCTRL_DT_DEV_CONFIG_GET(node),                         \
+        .sync     = DT_PROP(node, sync),                                     \
+        .protocol = DT_PROP(node, protocol),                                 \
+        .mode     = DT_PROP(node, mode),                                     \
+        .nomclk   = DT_PROP(node, nomck),                                    \
+    };                                                                       \
+                                                                             \
+    DEVICE_DT_DEFINE(node,                                                   \
+        sai_sub_probe,                                                       \
+        NULL,                                                                \
+        NULL,                          			                             \
+        &sub_cfg##node,                                                      \
+        PRE_KERNEL_1,                                                        \
+        SAI_STM32_INIT_PRIORITY,                                   \
+        &sai_stm32_api);
+
+#define SAI_INIT(inst)                                                          \
+static const struct stm32_pclken sai_clock_dts_data##inst[] =                   \
+{                                                                               \
+        SAI_CLOCKS(inst)                                                        \
+};                                                                              \
+                                                                                \
+static const struct sai_stm32_dts_config_t sai_cfg##inst =                      \
+{                                                                               \
+        .clockDev  = DEVICE_DT_GET(DT_INST_CLOCKS_CTLR_BY_IDX(inst, 0)),        \
+        .clockData = sai_clock_dts_data##inst,                                  \
+        .clock_num = DT_INST_NUM_CLOCKS(inst),                                  \
+        .syncout   = DT_PROP(DT_DRV_INST(inst), syncout),                       \
+        .syncin    = DT_PROP(DT_DRV_INST(inst), syncin),                        \
+        .reg       = DT_INST_REG_ADDR(inst),                                    \
+};                                                                              \
+                                                                                \
+    DEVICE_DT_INST_DEFINE(inst,                                                 \
+        sai_probe,                                                              \
+        NULL,                                                                   \
+        NULL,                                                                   \
+        &sai_cfg##inst,                                                         \
+        PRE_KERNEL_1,                                                           \
+        70,                  					                                \
+        NULL);                                                                  \
+    DT_FOREACH_CHILD_STATUS_OKAY(DT_DRV_INST(inst), SAI_SUB_INIT)
+
+DT_INST_FOREACH_STATUS_OKAY(SAI_INIT)

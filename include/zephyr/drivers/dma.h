@@ -115,8 +115,10 @@ struct dma_block_config {
 #else
 	/** block starting address at source */
 	uint32_t source_address;
+	uint32_t source_address1;
 	/** block starting address at destination */
 	uint32_t dest_address;
+	uint32_t dest_address1;
 #endif
 	/** Address adjustment at gather boundary */
 	uint32_t source_gather_interval;
@@ -163,8 +165,7 @@ struct dma_block_config {
 	 * - 0b1 source request postponed until destination request happens
 	 */
 	uint16_t  flow_control_mode : 1;
-
-	uint16_t  _reserved :          3;
+	uint16_t  _reserved :         3;
 };
 
 /** The DMA callback event has occurred at the completion of a transfer list */
@@ -273,6 +274,7 @@ struct dma_config {
 	void *user_data;
 	/** Optional callback for completion and error events */
 	dma_callback_t dma_callback;
+	bool doubleBufferEN    : 1;
 };
 
 /**
@@ -429,6 +431,7 @@ __subsystem struct dma_driver_api {
 	 * See dma_release_channel() for details.
 	 */
 	dma_api_chan_release chan_release;
+	int (*get_current_target)(const struct device* dev, uint32_t channel);
 };
 
 /** @} */
@@ -447,6 +450,11 @@ static inline int dma_config(const struct device *dev, uint32_t channel,
 			     struct dma_config *config)
 {
 	return DEVICE_API_GET(dma, dev)->config(dev, channel, config);
+}
+
+static inline int dma_get_current_target(const struct device *dev, uint32_t channel)
+{
+	return DEVICE_API_GET(dma, dev)->get_current_target(dev, channel);
 }
 
 /**

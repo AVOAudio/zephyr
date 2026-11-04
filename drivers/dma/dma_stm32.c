@@ -698,6 +698,8 @@ static int dma_stm32_configure(const struct device *dev,
 	if (stream->direction == MEMORY_TO_PERIPHERAL) {
 		DMA_InitStruct.MemoryOrM2MDstAddress =
 					config->head_block->source_address;
+		if (config->doubleBufferEN)
+					LL_DMA_SetMemory1Address(dma, id, config->head_block->source_address1);
 		DMA_InitStruct.PeriphOrM2MSrcAddress =
 					config->head_block->dest_address;
 		DMA_InitStruct.MemoryOrM2MDstDataSize = table_m_size[source_index];
@@ -707,6 +709,8 @@ static int dma_stm32_configure(const struct device *dev,
 					config->head_block->source_address;
 		DMA_InitStruct.MemoryOrM2MDstAddress =
 					config->head_block->dest_address;
+		if (config->doubleBufferEN)
+					LL_DMA_SetMemory1Address(dma, id, config->head_block->dest_address1);
 		DMA_InitStruct.PeriphOrM2MSrcDataSize = table_p_size[source_index];
 		DMA_InitStruct.MemoryOrM2MDstDataSize = table_m_size[dest_index];
 	}
@@ -831,12 +835,12 @@ static int dma_stm32_configure(const struct device *dev,
 	LL_DMA_EnableIT_TE(dma, dma_stm32_id_to_stream(id));
 
 	/* Enable transfer complete ISR if in non-cyclic mode or a callback is requested */
-	if (!stream->cyclic || stream->dma_callback != NULL) {
+	if ((!stream->cyclic || stream->dma_callback != NULL) && config-> complete_callback_en) {
 		LL_DMA_EnableIT_TC(dma, dma_stm32_id_to_stream(id));
 	}
 
 	/* Enable Half-Transfer irq if circular mode is enabled and a callback is requested */
-	if (stream->cyclic && stream->dma_callback != NULL) {
+	if (stream->cyclic && stream->dma_callback != NULL && config->half_complete_callback_en) {
 		LL_DMA_EnableIT_HT(dma, dma_stm32_id_to_stream(id));
 	}
 
@@ -852,6 +856,7 @@ static int dma_stm32_configure(const struct device *dev,
 	 */
 	LL_DMA_DisableIT_FE(dma, dma_stm32_id_to_stream(id));
 #endif
+	config->doubleBufferEN ? sys_update32(1 << 18, dev_config->base + (0x10 + (0x18 * id)), 1 << 18) : sys_update32(0 << 18, dev_config->base + (0x10 + (0x18 * id)), 1 << 18);
 	return ret;
 }
 
@@ -1037,12 +1042,21 @@ static int dma_stm32_get_status(const struct device *dev,
 	return 0;
 }
 
+int dma_stm32_get_current_target(const struct device* dev, uint32_t id)
+{
+	const struct dma_stm32_config *config = dev->config;
+	DMA_TypeDef *dma = (DMA_TypeDef *)(config->base);
+
+	return LL_DMA_GetCurrentTargetMem(dma, dma_stm32_id_to_stream(id) - STM32_DMA_STREAM_OFFSET);
+}
+
 static DEVICE_API(dma, dma_funcs) = {
 	.reload		 = dma_stm32_reload,
 	.config		 = dma_stm32_configure,
 	.start		 = dma_stm32_start,
 	.stop		 = dma_stm32_stop,
 	.get_status	 = dma_stm32_get_status,
+	.get_current_target = dma_stm32_get_current_target,
 };
 
 #define DMA_STM32_INIT_DEV(index)						\

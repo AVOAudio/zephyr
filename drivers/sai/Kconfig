@@ -1,0 +1,14 @@
+
+menuconfig SAI
+    bool "Serial Audio Interface (SAI) bus drivers"
+    select DMA
+    help
+      Enable support for the SAI (Serial Audio Interface) hardware bus.
+
+if SAI
+
+comment "Device Drivers"
+
+source "drivers/sai/Kconfig.*"
+
+endif # SAI
