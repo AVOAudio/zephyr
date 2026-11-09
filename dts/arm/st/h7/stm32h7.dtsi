@@ -1088,7 +1088,7 @@
 			status = "disabled";
 		};
         sai1: sai1@40015800 {
-            compatible = "st,stm32-sai";
+            compatible = "st,dai-sai";
             #address-cells = <1>;
             #size-cells = <1>;
             reg = <0x40015800 0x400>;

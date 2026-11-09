@@ -11,6 +11,7 @@ add_subdirectory_ifdef(CONFIG_DAI_INTEL_UAOL intel/uaol)
 add_subdirectory_ifdef(CONFIG_DAI_NXP_ESAI nxp/esai)
 add_subdirectory_ifdef(CONFIG_DAI_NXP_MICFIL nxp/micfil)
 add_subdirectory_ifdef(CONFIG_DAI_NXP_SAI nxp/sai)
+add_subdirectory_ifdef(CONFIG_DAI_ST_SAI st/sai)
 # zephyr-keep-sorted-stop
 
 if(CONFIG_DAI_USERSPACE)

@@ -1,5 +1,5 @@
-#ifndef ZEPHYR_DRIVERS_SAI_SAI_STM32_H_
-#define ZEPHYR_DRIVERS_SAI_SAI_STM32_H_
+#ifndef ZEPHYR_DRIVERS_DAI_SAI_ST_H_
+#define ZEPHYR_DRIVERS_DAI_SAI_ST_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,7 +8,7 @@ extern "C" {
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 
-#include <zephyr/drivers/sai.h>
+#include <zephyr/drivers/dai.h>
 #include <zephyr/drivers/pinctrl.h>
 
 #include <zephyr/drivers/clock_control/stm32_clock_control.h>
@@ -37,6 +37,11 @@ struct sai_stm32_dts_config_t {
     const char* syncin;
 };
 
+struct st_sai_bespoke_cfg {
+    uint32_t mckdiv;
+    bool osr;
+};
+
 #define SAI_CLOCK_CONFIG(idx, inst)                                      \
     {                                                                    \
         .bus = DT_INST_CLOCKS_CELL_BY_IDX(inst, idx, bus),               \
@@ -50,4 +55,4 @@ struct sai_stm32_dts_config_t {
 }
 #endif
 
-#endif /* ZEPHYR_DRIVERS_SAI_SAI_STM32_H_ */
+#endif /* ZEPHYR_DRIVERS_DAI_SAI_ST_H_ */

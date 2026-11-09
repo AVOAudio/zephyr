@@ -9,7 +9,7 @@ description: |
   synchronization configuration. Each child node represents an individual
   SAI sub-block and provides its own audio configuration, DMA, and pinctrl.
 
-compatible: "st,stm32-sai"
+compatible: "st,dai-sai"
 
 include: base.yaml
 
@@ -52,7 +52,7 @@ properties:
       sai_b_ker_ck:
         SAI B kernel clock when the hardware provides a separate
         kernel clock for SAI B.
-
+        
   syncout:
     type: string
     required: true

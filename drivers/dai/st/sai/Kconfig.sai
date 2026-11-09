@@ -1,0 +1,16 @@
+
+config DAI_ST_SAI
+    bool "STM32 SAI driver"
+    depends on DAI
+    depends on DT_HAS_ST_DAI_SAI_ENABLED
+    select PINCTRL
+    select DMA
+    help
+      Enable the STM32 SAI hardware driver.
+
+config DAI_ST_SAI_INIT_PRIORITY
+    int "STM32 SAI initialization priority"
+    depends on DAI_ST_SAI
+    default 80
+    help
+      Initialization priority for STM32 SAI devices.
